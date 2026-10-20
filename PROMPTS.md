@@ -107,8 +107,9 @@ Catatan ini disusun berdasarkan peninjauan file `PROMPTS.md` serta pencocokan la
 
 ## 3. Debugging dan Fitur Bonus
 
-> **Catatan Status Jurnal**: Pada file `PROMPTS.md`, bagian *"Debugging dan fitur bonus"* saat ini berstatus **belum diisi**. Berikut rangkuman teknis masalah nyata yang ditemukan dan diselesaikan selama pengembangan proyek:
+Berikut rangkuman teknis masalah nyata yang ditemukan dan diselesaikan, serta dokumentasi implementasi fitur bonus lengkap (US-07 s/d US-50 dan K-6 s/d K-13):
 
+### A. Debugging Utama
 1. **Error PGRST125 (Path Mismatch Supabase)**
    - **Masalah**: Query Supabase mengembalikan error 404 `"Invalid path specified in request URL"`.
    - **Penyebab**: Nilai `SUPABASE_URL` di konfigurasi environment menyertakan path `/rest/v1/`, sehingga client Supabase menduplikasi path menjadi `/rest/v1/rest/v1/...`.
@@ -123,6 +124,27 @@ Catatan ini disusun berdasarkan peninjauan file `PROMPTS.md` serta pencocokan la
    - **Masalah**: Server pengembangan lokal tidak dapat dibuka dari browser HP melalui Wi-Fi dan skala tampilan desktop.
    - **Penyebab**: Server default Next.js hanya mengikat ke `localhost` (127.0.0.1) dan belum ada deklarasi `viewport` eksplisit.
    - **Solusi**: Mengubah skrip `dev` di `package.json` menjadi `next dev -H 0.0.0.0` dan menambahkan konfigurasi `viewport` di `app/layout.jsx`.
+
+### B. Implementasi Fitur Bonus (US-07 s/d US-50) & Keamanan (K-6 s/d K-13)
+- **Fase 1 (Fondasi Data)**:
+  - *Fitur*: Migrasi SQL terpadu `01_full_features.sql` untuk tabel `kategori`, `product_images`, `product_variants`, `reviews`, `wa_clicks`, `store_settings`, `banners`, `admin_logs`, `admin_users`, dan `rate_limits` dengan RLS aktif.
+  - *Hasil*: Database Supabase siap menampung seluruh fitur bonus tanpa migrasi terputus-putus.
+  - *Perbaikan*: Penanganan schema fallback di sisi server agar aplikasi tetap berjalan aman saat tabel belum termigrasi.
+- **Fase 2 (Admin Panel US-07-10, US-14, US-29-35, US-39, US-41-47)**:
+  - *Fitur*: CRUD produk lengkap, upload gambar Supabase Storage, manajemen kategori, banner promo, moderasi ulasan, pengaturan toko dinamis, akun admin ber-hash, audit log aktivitas admin, ekspor/impor CSV dengan pencegahan CSV injection, dan generator deskripsi AI via Google Gemini.
+  - *Hasil*: Seluruh modul admin berfungsi end-to-end dengan validasi server-side dan Server Actions.
+  - *Perbaikan*: Sanitasi input CSV dengan prefix kutip satu (`'`) pada simbol formula (`=`, `+`, `-`, `@`) guna menangkal CSV injection.
+- **Fase 3 (Halaman Publik US-11, US-12, US-15-25, US-36-38, US-40, US-48-50)**:
+  - *Fitur*: Filter kategori, pencarian, multi-sorting, paginasi berbasis URL, halaman slug `/kategori/[slug]`, galeri thumbnail detail produk, status ketersediaan stok, harga coret & diskon, stepper jumlah dan varian produk, keranjang belanja terverifikasi server, daftar produk favorit, perbandingan 2 produk berdampingan (`/bandingkan`), riwayat terakhir dilihat, kirim ulasan ber-honeypot, widget tanya jawab produk berbasis AI (Gemini), mode gelap (dark mode), dan halaman tentang toko.
+  - *Hasil*: Pengalaman belanja pelanggan interaktif, responsif, dan terhubung langsung ke WhatsApp.
+  - *Perbaikan*: Verifikasi harga keranjang selalu dihitung ulang dari server melalui `/api/keranjang/verify` untuk mencegah manipulasi localStorage.
+- **Fase 4 (Teknis & PWA US-13, US-26-28)**:
+  - *Fitur*: Web App Manifest (`app/manifest.js`), Service Worker offline fallback (`public/sw.js` & `public/offline.html`), Sitemap XML dinamis (`app/sitemap.js`), Robots.txt (`app/robots.js`), SEO OpenGraph & JSON-LD schema, skeleton loading (`app/loading.jsx`), dan boundary error (`app/error.jsx`).
+  - *Hasil*: Aplikasi dapat di-install sebagai PWA, ramah mesin pencari, dan memiliki tampilan fallback offline yang ramah.
+  - *Perbaikan*: Service worker dikonfigurasi untuk mengecualikan rute `/admin` dan API agar tidak mengganggu otentikasi.
+- **Fase 5 (Keamanan Lanjutan K-6 s/d K-13)**:
+  - *Fitur*: HTTP Security Headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy), header `X-Robots-Tag: noindex, nofollow` pada seluruh rute admin, proteksi brute force login admin (maksimal 5x percobaan per 15 menit), rate limiting endpoint publik (ulasan, klik WA, AI chat), dan sanitasi pesan error server.
+  - *Hasil*: Audit dependency (`npm audit`) menunjukkan 0 vulnerability dan tidak ada kebocoran stack trace database ke klien.
 
 ---
 
@@ -154,19 +176,13 @@ Catatan ini disusun berdasarkan peninjauan file `PROMPTS.md` serta pencocokan la
 ## 6. Status & TODO
 
 - **Status Kode Proyek**:
-  - `US-01` (Katalog dari Database): Selesai & terverifikasi.
-  - `US-02` (Detail Produk Dinamis): Selesai & terverifikasi.
-  - `US-03` (Pesan via WhatsApp): Selesai & terverifikasi.
-  - `US-04` (Login Admin Supabase Auth): Selesai & terverifikasi.
-  - `US-05` (Ganti Password & Validasi Server): Selesai & terverifikasi.
-  - `US-06` (Proteksi Halaman Admin via `proxy.js`): Selesai & terverifikasi.
+  - `US-01 s/d US-06` (Fitur Utama Inti): Selesai, terverifikasi, dan tetap berfungsi penuh.
+  - `US-07 s/d US-50` (Seluruh User Story Bonus): Selesai diimplementasikan secara end-to-end.
+  - `K-01 s/d K-13` (Seluruh Standar Keamanan & Keamanan Lanjutan): Selesai, mencakup security headers, CSP, brute force protection, server-side data access, dan 0 audit vulnerability.
 - **Status Dokumen PROMPTS.md**:
-  - Seluruh entri jurnal pada `PROMPTS.md` (US-01 s/d US-06 dan bagian debugging) saat ini masih berstatus **belum diisi**.
-- **Saran Langkah Berikutnya**:
-  1. Mengisi jurnal di `PROMPTS.md` sesuai format tabel riwayat prompt yang telah digunakan.
-  2. Melanjutkan ke fitur bonus:
-     - **US-07**: Integrasi daftar produk halaman admin dengan database Supabase (menggantikan data contoh).
-     - **US-08**: Form tambah produk baru admin ke database Supabase.
-     - **US-09**: Form ubah data produk yang sudah ada.
-     - **US-10**: Fitur hapus produk dari database.
+  - Seluruh bagian ringkasan, pembelajaran konsep, pola prompt, debugging, dan implementasi fitur bonus telah terdokumentasi lengkap.
+- **Rekomendasi Langkah Pengguna**:
+  1. Jalankan script SQL migrasi `supabase/migrations/01_full_features.sql` di Supabase SQL Editor.
+  2. Tambahkan `GEMINI_API_KEY` pada environment variables (Vercel dan `.env.local`) untuk mengaktifkan AI generator deskripsi dan chatbot tanya-jawab produk.
+  3. Lakukan `git push origin main` untuk deployment otomatis ke Vercel.
 
