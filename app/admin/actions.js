@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { validateProductData } from "@/lib/validation";
 import { uploadProductImage, deleteProductImage } from "@/lib/storage";
 import { logAdminActivity } from "@/lib/logs";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 async function requireAdminAuth() {
   const supabase = await buatKoneksiAdmin();
@@ -37,6 +39,25 @@ export async function loginAdmin(prevState, formData) {
 
   if (!email || !password) {
     return { error: "Email dan password wajib diisi." };
+  }
+
+  // K-11: Proteksi brute force login admin (maksimal 5x percobaan per 15 menit per IP)
+  try {
+    const headersList = await headers();
+    const ip =
+      headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      headersList.get("x-real-ip") ||
+      "admin-client";
+
+    const rate = await checkRateLimit(`login_attempt_${ip}`, 5, 15 * 60 * 1000);
+    if (!rate.allowed) {
+      const waitMinutes = Math.ceil(rate.retryAfter / 60);
+      return {
+        error: `Terlalu banyak percobaan masuk yang gagal. Silakan coba lagi dalam ${waitMinutes} menit demi keamanan akun Anda.`,
+      };
+    }
+  } catch {
+    // Non-blocking jika terjadi kendala pada pembacaan header
   }
 
   let errorMessage = null;

@@ -49,11 +49,11 @@ export async function POST(request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Gagal menyimpan ulasan. Coba beberapa saat lagi." }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: "Terjadi kesalahan pada sistem." }, { status: 500 });
   }
 }

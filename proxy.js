@@ -54,6 +54,9 @@ export async function proxy(request) {
     return NextResponse.redirect(adminUrl);
   }
 
+  // K-8: Tambahkan X-Robots-Tag pada seluruh respon area admin
+  response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+
   return response;
 }
 
