@@ -27,6 +27,18 @@ html {
   background: var(--color-latar);
 }
 
+html.dark {
+  --color-latar: #121815;
+  --color-permukaan: #1a221f;
+  --color-garis: #2b3631;
+  --color-teks: #f1f5f2;
+  --color-teks-lembut: #9eada5;
+  --color-utama: #2ea87c;
+  --color-utama-gelap: #238562;
+  --color-harga: #f3be6a;
+  --color-harga-latar: #332612;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-utama);
   outline-offset: 2px;
