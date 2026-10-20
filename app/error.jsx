@@ -36,3 +36,4 @@ export default function ErrorBoundary({ error, reset }) {
     </div>
   );
 }
+

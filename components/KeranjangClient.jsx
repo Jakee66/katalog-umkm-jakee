@@ -359,3 +359,4 @@ Mohon konfirmasi ketersediaan dan cara pembayaran. Terima kasih!`;
     </div>
   );
 }
+
